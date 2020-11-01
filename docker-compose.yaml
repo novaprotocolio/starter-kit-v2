@@ -36,21 +36,21 @@ services:
       - datavolume:/var/lib/postgresql/data
       - ./backend/db/migrations/0001-init.up.sql:/docker-entrypoint-initdb.d/0001-init.up.sql
       - ./envs/localhost/seed.sql:/docker-entrypoint-initdb.d/0002-seed.sql
-  web:
-    image: hydroprotocolio/hydro-scaffold-dex-web:latest
-    container_name: hydro-scaffold-dex-web
-    ports:
-      - 3000:8043
-    environment:
-      - CONFIG_VARS=REACT_APP_API_URL,REACT_APP_WS_URL,REACT_APP_NODE_URL,REACT_APP_HYDRO_PROXY_ADDRESS,REACT_APP_HYDRO_TOKEN_ADDRESS,REACT_APP_WETH_TOKEN_ADDRESS,REACT_APP_NETWORK_ID
-    env_file:
-      - ./web/.env
-    restart: always
-    logging:
-      <<: *logging_default
-    volumes:
-      # map build for deploy, when run start port is 4000
-      - ./web/build:/srv/http
+  # web:
+  #   image: hydroprotocolio/hydro-scaffold-dex-web:latest
+  #   container_name: hydro-scaffold-dex-web
+  #   ports:
+  #     - 3000:8043
+  #   environment:
+  #     - CONFIG_VARS=REACT_APP_API_URL,REACT_APP_WS_URL,REACT_APP_NODE_URL,REACT_APP_HYDRO_PROXY_ADDRESS,REACT_APP_HYDRO_TOKEN_ADDRESS,REACT_APP_WETH_TOKEN_ADDRESS,REACT_APP_NETWORK_ID
+  #   env_file:
+  #     - ./web/.env
+  #   restart: always
+  #   logging:
+  #     <<: *logging_default
+  #   volumes:
+  #     # map build for deploy, when run start port is 4000
+  #     - ./web/build:/srv/http
   admin:
     image: hydroprotocolio/hydro-scaffold-dex-backend:latest
     container_name: hydro-scaffold-dex-admin-api
