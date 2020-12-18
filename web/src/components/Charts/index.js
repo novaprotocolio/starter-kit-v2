@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { DeepChart, TradeChart } from 'sdk-charts';
 import 'sdk-charts/dist/style.css';
-// import { testData } from './constants'; # we can use testData to show what TradeChart looks like
+import { getTestData } from './constants'; // we can use testData to show what TradeChart looks like
 import api from '../../lib/api';
 
 class Charts extends React.Component {
@@ -27,7 +27,20 @@ class Charts extends React.Component {
 
   componentDidMount() {
     this.loadData();
-    this.interval = window.setInterval(() => this.loadRight(), 60000);
+    // this.interval = window.setInterval(() => this.loadRight(), 60000);
+    this.interval = window.setInterval(()=>this.loadTest(), 2000);
+  }
+
+  loadTest(items=5,beforeDays=1){
+    let startTime;
+    if(this.state.data.length === 0){
+      startTime = Date.now() - beforeDays * 24 * 3600 * 1000;
+      this.setState({data: getTestData({startTime})});
+    } else {
+      const data = this.state.data.slice(items);
+      startTime =data[data.length-1].time;
+      this.setState({data: getTestData({data, items,startTime})});
+    }    
   }
 
   componentDidUpdate(prevProps) {
@@ -235,13 +248,13 @@ class Charts extends React.Component {
           </div>
           <div className="grid flex-1 border-top">
             <DeepChart
+              theme="light"
               baseToken="HOT"
               quoteToken="DAI"
               styles={{ bidColor: '#00d99f', askColor: '#ff6f75', rowBackgroundColor: '#FFFFFF' }}
               asks={asks}
               bids={bids}
-              priceDecimals={5}
-              theme="light"
+              priceDecimals={5}              
               clickCallback={result => {
                 console.log('result: ', result);
               }}
