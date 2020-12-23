@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import { WalletButton, getSelectedAccount } from 'sdk-wallet';
 import './styles.scss';
 import { loadAccountHydroAuthentication } from '../../lib/session';
+import { ThemeSwitcher } from './ThemeSwitcher';
 
 const mapStateToProps = state => {
   const selectedAccount = getSelectedAccount(state);
@@ -37,7 +38,7 @@ class Header extends React.PureComponent {
     const { currentMarket, markets, dispatch } = this.props;
     return (
       <div className="navbar navbar-expand-lg">
-        <img className="navbar-brand" src={require('../../images/logo.png')} alt="Novalex" />
+        <img className="navbar-brand theme-animation" src={require('../../images/logo.png')} alt="Novalex" />
         <div className="dropdown navbar-nav mr-auto">
           <button
             className="btn btn-primary header-dropdown dropdown-toggle"
@@ -64,6 +65,11 @@ class Header extends React.PureComponent {
             })}
           </div>
         </div>
+        <div className="navbar-nav">
+          <div className="item">
+              <ThemeSwitcher/>
+          </div>
+        </div>
         <button
           className="btn btn-primary collapse-toggle"
           type="button"
@@ -73,17 +79,16 @@ class Header extends React.PureComponent {
           <i className="fa fa-bars" />
         </button>
         <div className="collapse" id="navbar-collapse">
-          <a
+          {/* <a
             href="https://hydroprotocol.io/developers/docs/overview/what-is-hydro.html"
             className="btn btn-primary item"
             target="_blank"
             rel="noopener noreferrer">
             DOCUMENTATION
-          </a>
+          </a> */}
           <div className="item">
             <WalletButton />
           </div>
-
           {this.renderAccount()}
         </div>
       </div>

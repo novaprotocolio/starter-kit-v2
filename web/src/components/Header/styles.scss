@@ -23,6 +23,72 @@
     }
 }
 
+.theme-animation {
+    transition: all .2s;
+}
+
+.dark-mode-text {
+    float: left;
+    line-height: 34px;
+    margin-right: 7px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin: 0;
+}
+
+.switch input {
+    display: none;
+}
+
+input:checked+.slider {
+    background-color: #fff;
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider, .slider:before {
+    position: absolute;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider {
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+}
+
+input:checked+.slider:before {
+    -webkit-transform: translateX(26px);
+    transform: translateX(26px);
+}
+.slider.round:before {
+    border-radius: 50%;
+}
+.blue-menu .slider:before {
+    background-color: #2d76e8;
+}
+.slider:before {
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: #fff;
+}
+
 @media screen and (max-width: 768px) {
     .collapse {
         position: absolute;
