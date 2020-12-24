@@ -17,6 +17,7 @@ import Fold from './components/Fold';
 import PerfectScrollbar from 'perfect-scrollbar';
 import { Wallet as SDKWallet } from 'sdk-wallet';
 import 'sdk-wallet/index.css';
+import './app.scss';
 
 const mapStateToProps = state => {
   const selectedAccountID = state.WalletReducer.get('selectedAccountID');

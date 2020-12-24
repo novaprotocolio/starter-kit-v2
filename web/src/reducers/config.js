@@ -9,7 +9,8 @@ const initialState = Map({
     decimals: 18
   },
   hotTokenAmount: new BigNumber(0),
-  websocketConnected: false
+  websocketConnected: false,
+  isDarkTheme: true
 });
 
 export default (state = initialState, action) => {

@@ -4,6 +4,7 @@ import { DeepChart, TradeChart } from 'sdk-charts';
 import 'sdk-charts/dist/style.css';
 import { getTestData } from './constants'; // we can use testData to show what TradeChart looks like
 import api from '../../lib/api';
+import { CONSTANTS } from '../../lib/constants';
 
 class Charts extends React.Component {
   constructor(props) {
@@ -217,6 +218,7 @@ class Charts extends React.Component {
         amount: priceLevel[1].toString()
       };
     });
+    const { isDarkTheme } = this.props;
     return (
       <>
         <div className="title flex justify-content-between align-items-center">
@@ -228,7 +230,7 @@ class Charts extends React.Component {
         <div className="flex-column flex-1 ">
           <div className="grid flex-2" ref={this.tradeChartWrapper}>
             <TradeChart
-              theme="light"
+              theme={isDarkTheme ? CONSTANTS.THEME.DARK_THEME : CONSTANTS.THEME.LIGHT_THEME}
               data={this.state.data}
               priceDecimals={5}
               styles={{ upColor: '#00d99f', downColor: '#ff6f75', background: '#FFFFFF' }}
@@ -248,7 +250,7 @@ class Charts extends React.Component {
           </div>
           <div className="grid flex-1 border-top">
             <DeepChart
-              theme="light"
+              theme={isDarkTheme ? CONSTANTS.THEME.DARK_THEME : CONSTANTS.THEME.LIGHT_THEME}
               baseToken="HOT"
               quoteToken="DAI"
               styles={{ bidColor: '#00d99f', askColor: '#ff6f75', rowBackgroundColor: '#FFFFFF' }}
@@ -270,7 +272,8 @@ const mapStateToProps = state => {
   return {
     asks: state.market.getIn(['orderbook', 'asks']),
     bids: state.market.getIn(['orderbook', 'bids']),
-    currentMarket: state.market.getIn(['markets', 'currentMarket'])
+    currentMarket: state.market.getIn(['markets', 'currentMarket']),
+    isDarkTheme: state.config.get('isDarkTheme')
   };
 };
 

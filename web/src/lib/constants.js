@@ -1,4 +1,5 @@
 export const CONSTANTS = {
+    DARK_CLASS: 'dark',
     THEME: {
         DARK_THEME: 'dark',
         LIGHT_THEME: 'light',

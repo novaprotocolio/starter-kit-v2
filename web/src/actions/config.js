@@ -20,3 +20,15 @@ export const loadWeb3NetworkID = web3NetworkID => {
     dispatch(setConfigs({ web3NetworkID }));
   };
 };
+
+export const toggleTheme = (theme) => {
+  return async (dispatch, getState) => {
+    let nextTheme = theme;
+    if (!nextTheme) {
+      const state = getState();
+      nextTheme = !state.config.get('isDarkTheme');
+    }
+   
+    dispatch(setConfigs({ isDarkTheme: nextTheme }));
+  };
+};

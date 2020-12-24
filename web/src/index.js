@@ -11,7 +11,10 @@ import BigNumber from 'bignumber.js';
 
 BigNumber.config({ EXPONENTIAL_AT: 1000 });
 
-export const store = createStore(rootReducer, applyMiddleware(thunk));
+export const store = createStore(
+  rootReducer,
+  applyMiddleware(thunk),
+  );
 
 ReactDOM.render(
   <Provider store={store}>

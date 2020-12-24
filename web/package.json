@@ -11,10 +11,11 @@
     "perfect-scrollbar": "^1.4.0",
     "react": "^16.8.3",
     "react-dom": "^16.8.6",
-    "react-redux": "^7.0.2",
-    "react-responsive": "^6.1.1",
+    "react-redux": "^7.2.0",
+    "react-responsive": "^8.2.0",
     "react-scripts": "2.1.5",
-    "redux": "^4.0.1",
+    "react-toggle": "^4.1.1",
+    "redux": "^4.0.5",
     "redux-form": "^8.1.0",
     "redux-thunk": "^2.3.0",
     "sdk-charts": "./sdk/sdk-charts",
@@ -30,7 +31,12 @@
   "eslintConfig": {
     "extends": "react-app"
   },
-  "browserslist": [">0.2%", "not dead", "not ie <= 11", "not op_mini all"],
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
   "devDependencies": {
     "babel-eslint": "9.0.0",
     "eslint": "5.12.0",

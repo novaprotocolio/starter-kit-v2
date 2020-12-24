@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+sdk/sdk-wallet/package-lock.json
+sdk/sdk-charts/package-lock.json
+yarn.lock
+package-lock.json
