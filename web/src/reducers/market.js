@@ -54,7 +54,11 @@ export default (state = initialState, action) => {
       state = state.setIn(['markets', 'data'], List(action.payload.markets));
       if (!state.getIn(['markets', 'currentMarket'])) {
         const currentMarket = getCurrentMarket();
-        state = state.setIn(['markets', 'currentMarket'], currentMarket);
+        if (currentMarket) {
+          state = state.setIn(['markets', 'currentMarket'], currentMarket);
+        } else {
+          state = state.setIn(['markets', 'currentMarket'], action.payload.markets[0]);
+        }
       }
       return state;
     case 'UPDATE_CURRENT_MARKET': {
