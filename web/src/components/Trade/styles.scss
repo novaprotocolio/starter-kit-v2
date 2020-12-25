@@ -2,7 +2,7 @@
 
 .trade {
     .form-title {
-        color: $black;
+        color: var(--color-primary-text);
         font-size: 16px;
     }
     .list {
@@ -19,5 +19,23 @@
             position: absolute;
             right: 12px;
         }
+    }
+    form {
+        .form-group {
+            .form-control {
+                background-color: var(--color-primary-input-background);
+                border-color: var(--color-primary-input-border);
+                color: var(--color-primary-text);
+            }
+        }
+        .form-control.btn-success {
+            background-color: var(--color-button-success-bg);
+        }
+    }
+    .tab-button {
+        background-color: var(--color-tab-primary-background);
+    }
+    .tab-button.active {
+        background-color: var(--color-tab-accent); 
     }
 }

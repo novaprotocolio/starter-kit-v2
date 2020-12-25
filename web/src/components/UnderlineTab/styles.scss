@@ -16,7 +16,7 @@
         position: relative;
     }
     .active {
-        color: $black;
+        color: var(--color-primary-text);
     }
 
     .underline,

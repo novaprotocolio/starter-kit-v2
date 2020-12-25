@@ -155,9 +155,9 @@ table {
     height: 48px;
     line-height: 48px;
     background: $backgroundGrey;
-    border-bottom: 1px solid $borderGrey;
+    border-bottom: 1px solid var(--color-primary-border);
     margin-left: -1px;
-    border-left: 1px solid $borderGrey;
+    border-left: 1px solid var(--color-primary-border);
     cursor: pointer;
 
     &.active {
@@ -174,13 +174,13 @@ table {
         font-size: 14px;
         padding: 0 12px;
         height: 48px;
-        border-bottom: 1px solid $borderGrey;
+        border-bottom: 1px solid var(--color-primary-border);
         display: flex;
         align-items: center;
     }
     .grid {
         min-width: 330px;
-        border-color: $borderGrey;
+        border-color: var(--color-primary-border);
         display: flex;
         flex-direction: column;
         overflow: hidden;

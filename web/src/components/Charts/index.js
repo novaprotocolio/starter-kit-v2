@@ -6,6 +6,7 @@ import { getTestData } from './constants'; // we can use testData to show what T
 import api from '../../lib/api';
 import { CONSTANTS } from '../../lib/constants';
 
+
 class Charts extends React.Component {
   constructor(props) {
     super(props);
@@ -24,6 +25,14 @@ class Charts extends React.Component {
       end: null,
       lastUpdatedAt: new Date().getTime() // for loadRight
     };
+  }
+
+  getVariables() {
+    const { isDarkTheme } = this.props;
+    if  (isDarkTheme) {
+      return CONSTANTS.CHARTS_VARIABLES.DARK_THEME;
+    }
+    return CONSTANTS.CHARTS_VARIABLES.LIGHT_THEME;
   }
 
   componentDidMount() {
@@ -219,6 +228,7 @@ class Charts extends React.Component {
       };
     });
     const { isDarkTheme } = this.props;
+    const themeVariables = this.getVariables();
     return (
       <>
         <div className="title flex justify-content-between align-items-center">
@@ -233,7 +243,7 @@ class Charts extends React.Component {
               theme={isDarkTheme ? CONSTANTS.THEME.DARK_THEME : CONSTANTS.THEME.LIGHT_THEME}
               data={this.state.data}
               priceDecimals={5}
-              styles={{ upColor: '#00d99f', downColor: '#ff6f75', background: '#FFFFFF' }}
+              styles={{ upColor: themeVariables.upColor, downColor: themeVariables.downColor, background: themeVariables.background }}
               clickCallback={result => {
                 console.log('result: ', result);
               }}
@@ -253,7 +263,7 @@ class Charts extends React.Component {
               theme={isDarkTheme ? CONSTANTS.THEME.DARK_THEME : CONSTANTS.THEME.LIGHT_THEME}
               baseToken="HOT"
               quoteToken="DAI"
-              styles={{ bidColor: '#00d99f', askColor: '#ff6f75', rowBackgroundColor: '#FFFFFF' }}
+              styles={{ bidColor: themeVariables.bidColor, askColor: themeVariables.askColor, rowBackgroundColor: themeVariables.background }}
               asks={asks}
               bids={bids}
               priceDecimals={5}              

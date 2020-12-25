@@ -28,6 +28,9 @@
 }
 
 @media screen and (max-width: 768px) {
+    .navbar-nav {
+        margin-right: 5px;
+    }
     .collapse {
         position: absolute;
         top: 100%;
@@ -62,7 +65,7 @@
 }
 
 .toggle-dark-theme {
-    margin-top: 10px!important;
+    margin-top: 5px!important;
 }
 
 .react-toggle-track-check {

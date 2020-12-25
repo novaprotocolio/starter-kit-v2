@@ -16,11 +16,24 @@ $white: #fff;
 html {
     --color-primary-text: #{$primaryTextColor};
     --color-primary-background: #{$primaryBackgroundColor};
-    --accent-dark: #{$accentColor};
+    --color-accent: #{$accentColor};
+    --color-primary-border: #{$borderGrey};
+    --color-green: #{$green};
+    --color-tab-accent: #{$backgroundGrey};
+    --color-primary-input-border: #{$primaryInputBorderLight};
+    --color-primary-input-background: #{$primaryInputBgLight};
+    --color-button-success-bg: #{$buttonSuccessBgLight};
 }
 
 html.dark {
     --color-primary-text: #{$primaryTextDarkColor};
     --color-primary-background: #{$primaryBackgroundDarkColor};
-    --accent-dark: #{$accentDarkColor};
+    --color-tab-primary-background: #{$primaryBackgroundDarkColor};
+    --color-accent: #{$accentDarkColor};
+    --color-tab-accent: #{$accentDarkColor};
+    --color-primary-border: #{$primaryBorderDark};
+    --color-green: #{$green};
+    --color-primary-input-border: #{$primaryInputBorderDark};
+    --color-primary-input-background: #{$primaryInputBgDark};
+    --color-button-success-bg: #{$buttonSuccessBgDark};
 }
