@@ -37,16 +37,16 @@ func startConstProductBot() {
 
 	makerClientOne := client.NewHydroClient(
 		os.Getenv("BOT_PRIVATE_KEY_ONE"),
-		os.Getenv("BOT_BASE_TOKEN_ONE"),
-		os.Getenv("BOT_QUOTE_TOKEN_ONE"),
-		os.Getenv("BOT_BASE_URL_ONE"),
+		os.Getenv("BOT_BASE_TOKEN"),
+		os.Getenv("BOT_QUOTE_TOKEN"),
+		os.Getenv("BOT_BASE_URL"),
 	)
 
 	makerClientTwo := client.NewHydroClient(
 		os.Getenv("BOT_PRIVATE_KEY_TWO"),
-		os.Getenv("BOT_BASE_TOKEN_TWO"),
-		os.Getenv("BOT_QUOTE_TOKEN_TWO"),
-		os.Getenv("BOT_BASE_URL_TWO"),
+		os.Getenv("BOT_BASE_TOKEN"),
+		os.Getenv("BOT_QUOTE_TOKEN"),
+		os.Getenv("BOT_BASE_URL"),
 	)
 
 	minPrice, _ := decimal.NewFromString(os.Getenv("BOT_MIN_PRICE"))
