@@ -1,4 +1,5 @@
 import { Map, List, OrderedMap } from 'immutable';
+import { getCurrentMarket } from '../lib/session';
 
 const initialOrderbook = Map({
   bids: List(),
@@ -52,7 +53,8 @@ export default (state = initialState, action) => {
     case 'LOAD_MARKETS':
       state = state.setIn(['markets', 'data'], List(action.payload.markets));
       if (!state.getIn(['markets', 'currentMarket'])) {
-        state = state.setIn(['markets', 'currentMarket'], action.payload.markets[0]);
+        const currentMarket = getCurrentMarket();
+        state = state.setIn(['markets', 'currentMarket'], currentMarket);
       }
       return state;
     case 'UPDATE_CURRENT_MARKET': {

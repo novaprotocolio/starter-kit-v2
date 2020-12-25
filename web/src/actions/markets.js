@@ -1,7 +1,9 @@
 import BigNumber from 'bignumber.js';
 import api from '../lib/api';
+import { saveCurrentMarket } from '../lib/session';
 
 export const updateCurrentMarket = currentMarket => {
+  saveCurrentMarket(currentMarket);
   return async dispatch => {
     return dispatch({
       type: 'UPDATE_CURRENT_MARKET',
@@ -38,7 +40,7 @@ export const loadTradeHistory = marketID => {
   };
 };
 
-const formatMarket = market => {
+export const formatMarket = market => {
   market.gasFeeAmount = new BigNumber(market.gasFeeAmount);
   market.asMakerFeeRate = new BigNumber(market.asMakerFeeRate);
   market.asTakerFeeRate = new BigNumber(market.asTakerFeeRate);
