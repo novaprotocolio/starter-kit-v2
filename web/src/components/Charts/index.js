@@ -37,8 +37,8 @@ class Charts extends React.Component {
 
   componentDidMount() {
     this.loadData();
-    // this.interval = window.setInterval(() => this.loadRight(), 60000);
-    this.interval = window.setInterval(()=>this.loadTest(), 2000);
+    this.interval = window.setInterval(() => this.loadRight(), 60000);
+    // this.interval = window.setInterval(()=>this.loadTest(), 2000);
   }
 
   loadTest(items=5,beforeDays=1){

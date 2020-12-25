@@ -703,7 +703,7 @@ export class OrderbookDeepChart extends BaseCanvas {
     this.drawCurrentPrice();
     this.drawXAxis();
     this.drawYAxis();
-    // this.drawZoom();
+    this.drawZoom();
     this.drawHover();
   };
 
