@@ -178,6 +178,8 @@ func (b *ConstProductBot) CreateSide() {
 		b.checkSide <- "one"
 	}
 	fmt.Println("log side ", b.side)
+
+
 }
 
 
@@ -289,4 +291,5 @@ func (b *ConstProductBot) ElegantExit() {
 	b.updateLock.Lock()
 	_, _ = b.client.CancelAllPendingOrders()
 	_, _ = b.clientTwo.CancelAllPendingOrders()
+	b.updateLock.Unlock()
 }
