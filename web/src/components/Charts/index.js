@@ -227,7 +227,12 @@ class Charts extends React.Component {
         amount: priceLevel[1].toString()
       };
     });
-    const { isDarkTheme } = this.props;
+    const { isDarkTheme, currentMarket } = this.props;
+
+    if (!currentMarket) {
+      return null;
+    }
+
     const themeVariables = this.getVariables();
     return (
       <>
@@ -261,8 +266,8 @@ class Charts extends React.Component {
           <div className="grid flex-1 border-top">
             <DeepChart
               theme={isDarkTheme ? CONSTANTS.THEME.DARK_THEME : CONSTANTS.THEME.LIGHT_THEME}
-              baseToken="HOT"
-              quoteToken="DAI"
+              baseToken={currentMarket.baseToken}
+              quoteToken={currentMarket.quoteToken}
               styles={{ bidColor: themeVariables.bidColor, askColor: themeVariables.askColor, rowBackgroundColor: themeVariables.background }}
               asks={asks}
               bids={bids}
