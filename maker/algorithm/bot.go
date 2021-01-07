@@ -2,7 +2,6 @@ package algorithm
 
 import (
 	"context"
-	"fmt"
 	"github.com/hydroprotocol/amm-bots/client"
 	"github.com/hydroprotocol/amm-bots/utils"
 	"github.com/shopspring/decimal"
@@ -123,7 +122,7 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 			select {
 				case side := <- b.checkSide: {
 					b.updateLock.Lock()
-					fmt.Println("checkSide ->> ", side)
+					logrus.Info("checkSide ->> ", side)
 					if len(b.ladderMap) == 0 || len(b.ladderMapTwo) == 0 {
 						b.CreateSide()
 					}
@@ -164,7 +163,7 @@ func (b *ConstProductBot) Init() {
 }
 
 func (b *ConstProductBot) CreateSide() {
-	fmt.Println("create side ->> ", b.side)
+	logrus.Info("create side ->> ", b.side)
 	if b.side == One {
 		b.SideOneToTwo()
 		b.side = Two
@@ -178,7 +177,7 @@ func (b *ConstProductBot) CreateSide() {
 		b.side = One
 		b.checkSide <- "one"
 	}
-	fmt.Println("log side ", b.side)
+	logrus.Info("log side ", b.side)
 
 
 }
