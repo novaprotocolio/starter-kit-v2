@@ -48,6 +48,7 @@ func NewConstProductBot(
 		decimal.New(0,0),
 		End,
 		make(chan string),
+		nil,
 	}
 	return &bot
 }
@@ -69,6 +70,7 @@ type ConstProductBot struct {
 	centerPrice 	decimal.Decimal
 	side 			SideClient
 	checkSide		chan string
+	cancelTimeoutLoop context.CancelFunc
 }
 
 func (b *ConstProductBot) Run(ctx context.Context) {
@@ -164,23 +166,44 @@ func (b *ConstProductBot) Init() {
 }
 
 func (b *ConstProductBot) CreateSide() {
+	var ctx context.Context
+	if b.cancelTimeoutLoop != nil {
+		logrus.Info("cancel timout create side")
+		b.cancelTimeoutLoop()
+	}
+
 	logrus.Info("create side ->> ", b.side)
 	if b.side == One {
 		b.SideOneToTwo()
 		b.side = Two
-		return
+		goto CHECKTIMEOUT
 	}
 	if b.side == Two {
 		b.SideTwoToOne()
 		b.side = End
-		return
+		goto CHECKTIMEOUT
 	}
 	if b.side == End {
 		b.Init()
 		b.side = One
 		b.checkSide <- "one"
-		return
+		goto CHECKTIMEOUT
 	}
+	ctx, b.cancelTimeoutLoop = context.WithCancel(context.Background())
+
+CHECKTIMEOUT:
+	ctxCancel, _ := context.WithDeadline(context.TODO(), time.Now().Add(time.Duration(50) * time.Second))
+	go func() {
+		select {
+			case <- ctx.Done(): {
+				return
+			}
+			case <- ctxCancel.Done(): {
+				logrus.Info("timeout create side")
+				b.CreateSide()
+			}
+		}
+	}()
 }
 
 
