@@ -139,8 +139,9 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 
 func (b *ConstProductBot) Init() {
 	// stop all
-	_, _ = b.client.CancelAllPendingOrders()
-	_, _ = b.clientTwo.CancelAllPendingOrders()
+	b.ElegantExit()
+	b.ladderMap = map[string]ConstProductLadder{}
+	b.ladderMapTwo = map[string]ConstProductLadder{}
 
 	baseTokenAmount, _, err := b.baseToken.GetBalance(b.web3Url, b.client.Address)
 	if err != nil {
