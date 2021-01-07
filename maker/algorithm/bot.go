@@ -166,7 +166,7 @@ func (b *ConstProductBot) Init() {
 }
 
 func (b *ConstProductBot) CreateSide() {
-	var ctx context.Context
+
 	if b.cancelTimeoutLoop != nil {
 		logrus.Info("cancel timout create side")
 		b.cancelTimeoutLoop()
@@ -189,11 +189,12 @@ func (b *ConstProductBot) CreateSide() {
 		b.checkSide <- "one"
 		goto CHECKTIMEOUT
 	}
-	ctx, b.cancelTimeoutLoop = context.WithCancel(context.Background())
 
 CHECKTIMEOUT:
-	ctxCancel, _ := context.WithDeadline(context.TODO(), time.Now().Add(time.Duration(50) * time.Second))
 	go func() {
+		var ctx context.Context
+		ctx, b.cancelTimeoutLoop = context.WithCancel(context.Background())
+		ctxCancel, _ := context.WithDeadline(context.TODO(), time.Now().Add(time.Duration(50) * time.Second))
 		select {
 			case <- ctx.Done(): {
 				return
