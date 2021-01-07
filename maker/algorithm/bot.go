@@ -167,19 +167,19 @@ func (b *ConstProductBot) CreateSide() {
 	if b.side == One {
 		b.SideOneToTwo()
 		b.side = Two
+		return
 	}
 	if b.side == Two {
 		b.SideTwoToOne()
 		b.side = End
+		return
 	}
 	if b.side == End {
 		b.Init()
 		b.side = One
 		b.checkSide <- "one"
+		return
 	}
-	logrus.Info("log side ", b.side)
-
-
 }
 
 
