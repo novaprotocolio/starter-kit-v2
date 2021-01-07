@@ -72,6 +72,9 @@ type ConstProductBot struct {
 }
 
 func (b *ConstProductBot) Run(ctx context.Context) {
+	// stop all
+	_, _ = b.client.CancelAllPendingOrders()
+	_, _ = b.clientTwo.CancelAllPendingOrders()
 	// init side
 	b.Init()
 	b.side = One
@@ -133,7 +136,6 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 }
 
 func (b *ConstProductBot) Init() {
-	_, _ = b.client.CancelAllPendingOrders()
 	baseTokenAmount, _, err := b.baseToken.GetBalance(b.web3Url, b.client.Address)
 	if err != nil {
 		panic(err)
