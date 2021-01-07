@@ -192,7 +192,7 @@ func (b *ConstProductBot) SideOneToTwo() {
 			b.createOrder(ladder, utils.BUY, price)
 			b.createOrderTwo(ladder, utils.SELL, price)
 		} else {
-			price = ladder.DownPrice
+			price = ladder.UpPrice
 			b.createOrderTwo(ladder, utils.BUY, price)
 			b.createOrder(ladder, utils.SELL, price)
 		}
