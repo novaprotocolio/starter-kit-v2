@@ -137,6 +137,7 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 }
 
 func (b *ConstProductBot) Init() {
+	logrus.Info("Run init")
 	// stop all
 	b.ElegantExit()
 	b.ladderMap = map[string]ConstProductLadder{}
