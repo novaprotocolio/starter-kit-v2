@@ -290,7 +290,9 @@ func (b *ConstProductBot) maintainOrderTwo(orderId string) {
 
 func (b *ConstProductBot) ElegantExit() {
 	b.updateLock.Lock()
+	logrus.Info("cancel order client one")
 	_, _ = b.client.CancelAllPendingOrders()
+	logrus.Info("cancel order client two")
 	_, _ = b.clientTwo.CancelAllPendingOrders()
 	b.updateLock.Unlock()
 }
