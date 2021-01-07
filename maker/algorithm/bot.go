@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+type SideClient string
+
+const (
+	One SideClient = "one"
+	Two SideClient = "two"
+	End SideClient = "end"
+)
+
 func NewConstProductBot(
 	client *client.HydroClient,
 	clientTwo *client.HydroClient,
@@ -36,6 +44,10 @@ func NewConstProductBot(
 		expandInventory,
 		web3Url,
 		&lock,
+		nil,
+		decimal.New(0,0),
+		End,
+		make(chan string),
 	}
 	return &bot
 }
@@ -46,17 +58,24 @@ type ConstProductBot struct {
 	baseToken       *utils.ERC20
 	quoteToken      *utils.ERC20
 	ladderMap       map[string]ConstProductLadder
-	ladderMapTwo       map[string]ConstProductLadder
+	ladderMapTwo    map[string]ConstProductLadder
 	minPrice        decimal.Decimal
 	maxPrice        decimal.Decimal
 	priceGap        decimal.Decimal
 	expandInventory decimal.Decimal
 	web3Url         string
 	updateLock      *sync.Mutex
+	ladders []ConstProductLadder
+	centerPrice 	decimal.Decimal
+	side 			SideClient
+	checkSide		chan string
 }
 
 func (b *ConstProductBot) Run(ctx context.Context) {
-	b.init()
+	// init side
+	b.Init()
+	b.side = One
+	b.CreateSide()
 
 	// client one
 	go func() {
@@ -95,9 +114,25 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 			}
 		}
 	}()
+
+
+	go func() {
+		for {
+			select {
+				case <- b.checkSide: {
+					if len(b.ladderMap) == 0 && len(b.ladderMapTwo) == 0 {
+						b.CreateSide()
+					}
+				}
+				case <- ctx.Done(): {
+					return
+				}
+			}
+		}
+	}()
 }
 
-func (b *ConstProductBot) init() {
+func (b *ConstProductBot) Init() {
 	_, _ = b.client.CancelAllPendingOrders()
 	baseTokenAmount, _, err := b.baseToken.GetBalance(b.web3Url, b.client.Address)
 	if err != nil {
@@ -107,7 +142,7 @@ func (b *ConstProductBot) init() {
 	if err != nil {
 		panic(err)
 	}
-	ladders, err := GenerateConstProductLadders(
+	b.ladders, err = GenerateConstProductLadders(
 		*baseTokenAmount,
 		*quoteTokenAmount,
 		b.minPrice,
@@ -115,25 +150,66 @@ func (b *ConstProductBot) init() {
 		b.priceGap,
 		b.expandInventory,
 	)
-	centerPrice := quoteTokenAmount.Div(*baseTokenAmount)
-	for _, ladder := range ladders {
-		if ladder.UpPrice.LessThanOrEqual(centerPrice) {
-			b.createOrder(ladder, utils.BUY)
-			b.createOrderTwo(ladder, utils.SELL)
+	b.centerPrice = quoteTokenAmount.Div(*baseTokenAmount)
+
+}
+
+func (b *ConstProductBot) CreateSide() {
+	if b.side == One {
+		b.SideOneToTwo()
+		b.side = Two
+	}
+	if b.side == Two {
+		b.SideTwoToOne()
+		b.side = End
+	}
+	if b.side == End {
+		b.Init()
+		b.side = One
+		b.checkSide <- "one"
+	}
+}
+
+
+func (b *ConstProductBot) SideOneToTwo() {
+	var price decimal.Decimal
+
+	for _, ladder := range b.ladders {
+		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
+			price = ladder.UpPrice
+			b.createOrder(ladder, utils.BUY, price)
+			b.createOrderTwo(ladder, utils.SELL, price)
 		} else {
-			b.createOrder(ladder, utils.SELL)
-			b.createOrderTwo(ladder, utils.BUY)
+			price = ladder.DownPrice
+			b.createOrderTwo(ladder, utils.BUY, price)
+			b.createOrder(ladder, utils.SELL, price)
 		}
 	}
 }
 
-func (b *ConstProductBot) createOrder(ladder ConstProductLadder, side string) {
+func (b *ConstProductBot) SideTwoToOne() {
 	var price decimal.Decimal
-	if side == utils.SELL {
-		price = ladder.UpPrice
-	} else {
-		price = ladder.DownPrice
+
+	for _, ladder := range b.ladders {
+		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
+			price = ladder.UpPrice
+			b.createOrderTwo(ladder, utils.BUY, price)
+			b.createOrder(ladder, utils.SELL, price)
+		} else {
+			price = ladder.UpPrice
+			b.createOrder(ladder, utils.BUY, price)
+			b.createOrderTwo(ladder, utils.SELL, price)
+		}
 	}
+}
+
+func (b *ConstProductBot) createOrder(ladder ConstProductLadder, side string, price decimal.Decimal) {
+	//var price decimal.Decimal
+	//if side == utils.SELL {
+	//	price = ladder.UpPrice
+	//} else {
+	//	price = ladder.DownPrice
+	//}
 	orderId, err := b.client.CreateOrder(
 		price,
 		ladder.Amount,
@@ -148,14 +224,14 @@ func (b *ConstProductBot) createOrder(ladder ConstProductLadder, side string) {
 	}
 }
 
-func (b *ConstProductBot) createOrderTwo(ladder ConstProductLadder, side string) {
-	var price decimal.Decimal
-	if side == utils.SELL {
-		price = ladder.DownPrice
-	} else {
-		price = ladder.UpPrice
-	}
-	orderId, err := b.client.CreateOrder(
+func (b *ConstProductBot) createOrderTwo(ladder ConstProductLadder, side string, price decimal.Decimal) {
+	//var price decimal.Decimal
+	//if side == utils.SELL {
+	//	price = ladder.UpPrice
+	//} else {
+	//	price = ladder.DownPrice
+	//}
+	orderId, err := b.clientTwo.CreateOrder(
 		price,
 		ladder.Amount,
 		side,
@@ -175,20 +251,26 @@ func (b *ConstProductBot) maintainOrder(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			b.createOrder(b.ladderMap[orderId], utils.ToggleSide(orderInfo.Side))
+			//b.createOrder(b.ladderMap[orderId], utils.ToggleSide(orderInfo.Side))
 			delete(b.ladderMap, orderId)
+			if len(b.ladderMap) == 0 {
+				b.checkSide <- "one"
+			}
 		}
 	}
 }
 
 func (b *ConstProductBot) maintainOrderTwo(orderId string) {
-	orderInfo, err := b.client.GetOrder(orderId)
+	orderInfo, err := b.clientTwo.GetOrder(orderId)
 	if err != nil {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			b.createOrderTwo(b.ladderMapTwo[orderId], utils.ToggleSide(orderInfo.Side))
+			//b.createOrderTwo(b.ladderMapTwo[orderId], utils.ToggleSide(orderInfo.Side))
 			delete(b.ladderMapTwo, orderId)
+			if len(b.ladderMapTwo) == 0 {
+				b.checkSide <- "one"
+			}
 		}
 	}
 }
