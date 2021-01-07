@@ -73,9 +73,7 @@ type ConstProductBot struct {
 }
 
 func (b *ConstProductBot) Run(ctx context.Context) {
-	// stop all
-	_, _ = b.client.CancelAllPendingOrders()
-	_, _ = b.clientTwo.CancelAllPendingOrders()
+
 	// init side
 	b.Init()
 	b.side = One
@@ -124,10 +122,12 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 		for {
 			select {
 				case side := <- b.checkSide: {
+					b.updateLock.Lock()
 					fmt.Println("checkSide ->> ", side)
-					if len(b.ladderMap) == 0 && len(b.ladderMapTwo) == 0 {
+					if len(b.ladderMap) == 0 || len(b.ladderMapTwo) == 0 {
 						b.CreateSide()
 					}
+					b.updateLock.Unlock()
 				}
 				case <- ctx.Done(): {
 					return
@@ -138,6 +138,10 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 }
 
 func (b *ConstProductBot) Init() {
+	// stop all
+	_, _ = b.client.CancelAllPendingOrders()
+	_, _ = b.clientTwo.CancelAllPendingOrders()
+
 	baseTokenAmount, _, err := b.baseToken.GetBalance(b.web3Url, b.client.Address)
 	if err != nil {
 		panic(err)
