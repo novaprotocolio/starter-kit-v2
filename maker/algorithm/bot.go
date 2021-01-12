@@ -171,19 +171,19 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 
 
 	for _, ladder := range b.ladders {
-		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
-			//price := ladder.UpPrice
-			//b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
-			//b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
-
-			// not create order
-			continue
-		} else {
-			wg.Add(2)
-			price := ladder.UpPrice
-			go b.OrderCheck(ctx, mutex, &wg, ladder, One , price)
-			go b.OrderCheck(ctx, mutex, &wg, ladder, Two , price)
-		}
+		//if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
+		//	//price := ladder.UpPrice
+		//	//b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
+		//	//b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
+		//
+		//	// not create order
+		//	continue
+		//} else {
+		wg.Add(2)
+		price := ladder.UpPrice
+		go b.OrderCheck(ctx, mutex, &wg, ladder, One , price)
+		go b.OrderCheck(ctx, mutex, &wg, ladder, Two , price)
+		//}
 	}
 
 
