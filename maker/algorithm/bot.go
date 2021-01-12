@@ -299,16 +299,18 @@ LoopWaiting:
 		}
 
 		if success == 2 {
-
 			break LoopWaiting
 		}
 	}
 
 	logrus.Info("exits check timeout order ", orderIdOne, orderIdTwo )
-	b.updateLock.Lock()
-	delete(b.orderCheck, orderIdOne)
-	delete(b.orderCheckTwo, orderIdTwo)
-	b.updateLock.Unlock()
+
+	go func() {
+		b.updateLock.Lock()
+		delete(b.orderCheck, orderIdOne)
+		delete(b.orderCheckTwo, orderIdTwo)
+		b.updateLock.Unlock()
+	}()
 
 	if success < 2 {
 		b.client.CancelOrder(orderIdOne)
