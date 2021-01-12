@@ -139,6 +139,7 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 }
 
 func (b *ConstProductBot) Init() {
+	logrus.Info("Init data")
 
 	baseTokenAmount, _, err := b.baseToken.GetBalance(b.web3Url, b.client.Address)
 	if err != nil {
@@ -166,7 +167,7 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		wg sync.WaitGroup
 	)
 
-
+	logrus.Info("Loop order")
 
 
 	for _, ladder := range b.ladders {
