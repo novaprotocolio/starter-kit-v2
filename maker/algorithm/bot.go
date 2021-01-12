@@ -193,12 +193,14 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, block chan bool, mutex
 		wg.Done()
 	}()
 
+	logrus.Info("OrderCheck")
 	select {
 		case <- ctx.Done(): {
 			return
 		}
 		case <- block:
 	}
+	logrus.Info("Run OrderCheck")
 
 	var (
 		orderIdOne string
