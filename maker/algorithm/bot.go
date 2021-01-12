@@ -185,18 +185,17 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		go b.OrderCheck(ctx, mutex, &wg, ladder, Two , price)
 		//}
 	}
-
-
+	
 	wg.Wait()
 }
 
 func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
 
+	defer wg.Done()
 	defer func() {
-		mutex.Lock()
-		b.blockGroup <- true
-		mutex.Unlock()
-		wg.Done()
+		go func() {
+			b.blockGroup <- true
+		}()
 	}()
 
 	logrus.Info("OrderCheck")
