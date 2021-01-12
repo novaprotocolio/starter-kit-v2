@@ -45,6 +45,7 @@ func NewConstProductBot(
 		&lock,
 		nil,
 		decimal.New(0,0),
+		make(chan bool),
 	}
 	return &bot
 }
@@ -64,6 +65,7 @@ type ConstProductBot struct {
 	updateLock      *sync.Mutex
 	ladders []ConstProductLadder
 	centerPrice 	decimal.Decimal
+	blockGroup chan bool
 }
 
 func (b *ConstProductBot) Run(ctx context.Context) {
@@ -73,6 +75,13 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 	// stop all
 	b.ElegantExit()
 
+
+	go func() {
+		// add 3 thread activate
+		b.blockGroup <- true
+		b.blockGroup <- true
+		b.blockGroup <- true
+	}()
 
 	// loop order
 	go func() {
@@ -157,7 +166,8 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		wg sync.WaitGroup
 	)
 
-	block := make(chan bool)
+
+
 
 	for _, ladder := range b.ladders {
 		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
@@ -170,27 +180,20 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		} else {
 			wg.Add(2)
 			price := ladder.UpPrice
-			go b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
-			go b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
+			go b.OrderCheck(ctx, mutex, &wg, ladder, One , price)
+			go b.OrderCheck(ctx, mutex, &wg, ladder, Two , price)
 		}
 	}
-	
-	go func() {
-		// add 3 thread activate
-		block <- true
-		block <- true
-		block <- true
-	}()
+
 
 	wg.Wait()
-	close(block)
 }
 
-func (b *ConstProductBot) OrderCheck(ctx context.Context, block chan bool, mutex *sync.Mutex, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
+func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
 
 	defer func() {
 		mutex.Lock()
-		block <- true
+		b.blockGroup <- true
 		mutex.Unlock()
 		wg.Done()
 	}()
@@ -200,7 +203,7 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, block chan bool, mutex
 		case <- ctx.Done(): {
 			return
 		}
-		case <- block:
+		case <- b.blockGroup:
 	}
 	logrus.Info("Run OrderCheck")
 
