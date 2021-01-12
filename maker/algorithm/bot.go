@@ -185,8 +185,9 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		go b.OrderCheck(ctx, mutex, &wg, ladder, Two , price)
 		//}
 	}
-	
+
 	wg.Wait()
+	logrus.Info("Loop order after Wait")
 }
 
 func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
@@ -221,7 +222,7 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 			ladder.Amount,
 			utils.BUY,
 			utils.LIMIT,
-			0,
+			25,
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
@@ -234,7 +235,7 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 			ladder.Amount,
 			utils.SELL,
 			utils.LIMIT,
-			0,
+			25,
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
@@ -250,7 +251,7 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 			ladder.Amount,
 			utils.BUY,
 			utils.LIMIT,
-			0,
+			25,
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
@@ -263,7 +264,7 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 			ladder.Amount,
 			utils.SELL,
 			utils.LIMIT,
-			0,
+			25,
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
