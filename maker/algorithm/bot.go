@@ -15,7 +15,6 @@ type SideClient string
 const (
 	One SideClient = "one"
 	Two SideClient = "two"
-	End SideClient = "end"
 )
 
 func NewConstProductBot(
@@ -36,8 +35,8 @@ func NewConstProductBot(
 		clientTwo,
 		baseToken,
 		quoteToken,
-		map[string]ConstProductLadder{},
-		map[string]ConstProductLadder{},
+		make(map[string]chan bool),
+		make(map[string]chan bool),
 		minPrice,
 		maxPrice,
 		priceGap,
@@ -46,9 +45,6 @@ func NewConstProductBot(
 		&lock,
 		nil,
 		decimal.New(0,0),
-		End,
-		make(chan string),
-		nil,
 	}
 	return &bot
 }
@@ -58,8 +54,8 @@ type ConstProductBot struct {
 	clientTwo		*client.HydroClient
 	baseToken       *utils.ERC20
 	quoteToken      *utils.ERC20
-	ladderMap       map[string]ConstProductLadder
-	ladderMapTwo    map[string]ConstProductLadder
+	orderCheck		map[string]chan bool
+	orderCheckTwo		map[string]chan bool
 	minPrice        decimal.Decimal
 	maxPrice        decimal.Decimal
 	priceGap        decimal.Decimal
@@ -68,25 +64,38 @@ type ConstProductBot struct {
 	updateLock      *sync.Mutex
 	ladders []ConstProductLadder
 	centerPrice 	decimal.Decimal
-	side 			SideClient
-	checkSide		chan string
-	cancelTimeoutLoop context.CancelFunc
 }
 
 func (b *ConstProductBot) Run(ctx context.Context) {
 
 	// init side
-	b.Init()
-	b.side = One
-	b.CreateSide()
+	logrus.Info("Run init")
+	// stop all
+	b.ElegantExit()
 
-	// client one
+
+	// loop order
 	go func() {
-		tinker := time.Tick(15 * time.Second)
+		for  {
+			select {
+				case <- ctx.Done(): {
+					return
+				}
+				default: {
+					b.Init()
+					b.OrderLoop(ctx)
+				}
+			}
+		}
+	}()
+
+	// check order client one
+	go func() {
+		tinker := time.Tick(3 * time.Second)
 		for {
 			select {
 				case <- tinker: {
-					for key := range b.ladderMap {
+					for key := range b.orderCheck {
 						b.updateLock.Lock()
 						b.maintainOrder(key)
 						b.updateLock.Unlock()
@@ -99,51 +108,28 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 		}
 	}()
 
-	// client two
+	// check order client two
 	go func() {
-		tinker := time.Tick(15 * time.Second)
+		tinker := time.Tick(3 * time.Second)
 		for {
 			select {
-				case <- tinker: {
-					for key := range b.ladderMapTwo {
-						b.updateLock.Lock()
-						b.maintainOrderTwo(key)
-						b.updateLock.Unlock()
-					}
-				}
-				case <- ctx.Done(): {
-					return
-				}
-			}
-		}
-	}()
-
-
-	go func() {
-		for {
-			select {
-				case side := <- b.checkSide: {
+			case <- tinker: {
+				for key := range b.orderCheckTwo {
 					b.updateLock.Lock()
-					logrus.Info("checkSide ->> ", side)
-					if len(b.ladderMap) == 0 || len(b.ladderMapTwo) == 0 {
-						b.CreateSide()
-					}
+					b.maintainOrderTwo(key)
 					b.updateLock.Unlock()
 				}
-				case <- ctx.Done(): {
-					return
-				}
+			}
+			case <- ctx.Done(): {
+				return
+			}
 			}
 		}
 	}()
+
 }
 
 func (b *ConstProductBot) Init() {
-	logrus.Info("Run init")
-	// stop all
-	b.ElegantExit()
-	b.ladderMap = map[string]ConstProductLadder{}
-	b.ladderMapTwo = map[string]ConstProductLadder{}
 
 	baseTokenAmount, _, err := b.baseToken.GetBalance(b.web3Url, b.client.Address)
 	if err != nil {
@@ -165,120 +151,154 @@ func (b *ConstProductBot) Init() {
 
 }
 
-func (b *ConstProductBot) CreateSide() {
+func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
+	var (
+		mutex = &sync.Mutex{}
+		wg sync.WaitGroup
+	)
 
-	if b.cancelTimeoutLoop != nil {
-		logrus.Info("cancel timout create side")
-		b.cancelTimeoutLoop()
-	}
+	block := make(chan bool)
 
-	logrus.Info("create side ->> ", b.side)
-	if b.side == One {
-		b.SideOneToTwo()
-		b.side = Two
-		goto CHECKTIMEOUT
-	}
-	if b.side == Two {
-		b.SideTwoToOne()
-		b.side = End
-		goto CHECKTIMEOUT
-	}
-	if b.side == End {
-		b.Init()
-		b.side = One
-		b.checkSide <- "one"
-		goto CHECKTIMEOUT
-	}
+	// add 3 thread activate
+	block <- true
+	block <- true
+	block <- true
 
-CHECKTIMEOUT:
-	go func() {
-		var ctx context.Context
-		ctx, b.cancelTimeoutLoop = context.WithCancel(context.Background())
-		ctxCancel, _ := context.WithDeadline(context.TODO(), time.Now().Add(time.Duration(50) * time.Second))
-		select {
-			case <- ctx.Done(): {
-				return
-			}
-			case <- ctxCancel.Done(): {
-				logrus.Info("timeout create side")
-				b.CreateSide()
-			}
+	for _, ladder := range b.ladders {
+		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
+			//price := ladder.UpPrice
+			//b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
+			//b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
+
+			// not create order
+			continue
+		} else {
+			wg.Add(2)
+			price := ladder.UpPrice
+			b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
+			b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
 		}
+	}
+
+	wg.Wait()
+	close(block)
+}
+
+func (b *ConstProductBot) OrderCheck(ctx context.Context, block chan bool, mutex *sync.Mutex, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
+
+	defer func() {
+		mutex.Lock()
+		block <- true
+		mutex.Unlock()
+		wg.Done()
 	}()
-}
 
+	select {
+		case <- ctx.Done(): {
+			return
+		}
+		case <- block:
+	}
 
-func (b *ConstProductBot) SideOneToTwo() {
-	var price decimal.Decimal
+	var (
+		orderIdOne string
+		orderIdTwo string
+		err error
+	)
 
-	for _, ladder := range b.ladders {
-		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
-			price = ladder.UpPrice
-			b.createOrder(ladder, utils.BUY, price)
-			b.createOrderTwo(ladder, utils.SELL, price)
-		} else {
-			price = ladder.UpPrice
-			b.createOrderTwo(ladder, utils.BUY, price)
-			b.createOrder(ladder, utils.SELL, price)
+	b.updateLock.Lock()
+
+	if side == One {
+		orderIdOne, err = b.client.CreateOrder(
+			price,
+			ladder.Amount,
+			utils.BUY,
+			utils.LIMIT,
+			0,
+		)
+		if err != nil {
+			logrus.Warn("create order failed ", err)
+			b.updateLock.Unlock()
+			return
+		}
+
+		orderIdTwo, err = b.clientTwo.CreateOrder(
+			price,
+			ladder.Amount,
+			utils.SELL,
+			utils.LIMIT,
+			0,
+		)
+		if err != nil {
+			logrus.Warn("create order failed ", err)
+			b.updateLock.Unlock()
+			return
+		}
+
+	}
+
+	if side == Two {
+		orderIdTwo, err = b.clientTwo.CreateOrder(
+			price,
+			ladder.Amount,
+			utils.BUY,
+			utils.LIMIT,
+			0,
+		)
+		if err != nil {
+			logrus.Warn("create order failed ", err)
+			b.updateLock.Unlock()
+			return
+		}
+
+		orderIdOne, err = b.client.CreateOrder(
+			price,
+			ladder.Amount,
+			utils.SELL,
+			utils.LIMIT,
+			0,
+		)
+		if err != nil {
+			logrus.Warn("create order failed ", err)
+			b.updateLock.Unlock()
+			return
 		}
 	}
-}
+	b.orderCheck[orderIdOne] = make(chan bool)
+	b.orderCheckTwo[orderIdTwo] = make(chan bool)
 
-func (b *ConstProductBot) SideTwoToOne() {
-	var price decimal.Decimal
+	b.updateLock.Unlock()
 
-	for _, ladder := range b.ladders {
-		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
-			price = ladder.UpPrice
-			b.createOrderTwo(ladder, utils.BUY, price)
-			b.createOrder(ladder, utils.SELL, price)
-		} else {
-			price = ladder.UpPrice
-			b.createOrder(ladder, utils.BUY, price)
-			b.createOrderTwo(ladder, utils.SELL, price)
+	success := 0
+	ctx, cancel := context.WithTimeout(ctx, time.Second * time.Duration(40))
+
+LoopWaiting:
+	for {
+		select {
+			case <- b.orderCheck[orderIdOne]: {
+				success++
+			}
+			case <- b.orderCheckTwo[orderIdTwo]: {
+				success++
+			}
+			case <- ctx.Done(): {
+				logrus.Info("timeout check order ->> ")
+				break LoopWaiting
+			}
+		}
+
+		if success == 2 {
+			cancel()
+			break LoopWaiting
 		}
 	}
-}
 
-func (b *ConstProductBot) createOrder(ladder ConstProductLadder, side string, price decimal.Decimal) {
-	//var price decimal.Decimal
-	//if side == utils.SELL {
-	//	price = ladder.UpPrice
-	//} else {
-	//	price = ladder.DownPrice
-	//}
-	orderId, err := b.client.CreateOrder(
-		price,
-		ladder.Amount,
-		side,
-		utils.LIMIT,
-		0,
-	)
-	if err != nil {
-		logrus.Warn("create order failed ", err)
-	} else {
-		b.ladderMap[orderId] = ladder
-	}
-}
+	delete(b.orderCheck, orderIdOne)
+	delete(b.orderCheckTwo, orderIdTwo)
 
-func (b *ConstProductBot) createOrderTwo(ladder ConstProductLadder, side string, price decimal.Decimal) {
-	//var price decimal.Decimal
-	//if side == utils.SELL {
-	//	price = ladder.UpPrice
-	//} else {
-	//	price = ladder.DownPrice
-	//}
-	orderId, err := b.clientTwo.CreateOrder(
-		price,
-		ladder.Amount,
-		side,
-		utils.LIMIT,
-		0,
-	)
-	if err != nil {
-		logrus.Warn("create order failed ", err)
-	} else {
-		b.ladderMapTwo[orderId] = ladder
+	if success < 2 {
+		b.client.CancelOrder(orderIdOne)
+		b.clientTwo.CancelOrder(orderIdTwo)
 	}
 }
 
@@ -288,11 +308,7 @@ func (b *ConstProductBot) maintainOrder(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			//b.createOrder(b.ladderMap[orderId], utils.ToggleSide(orderInfo.Side))
-			delete(b.ladderMap, orderId)
-			if len(b.ladderMap) == 0 {
-				b.checkSide <- "one"
-			}
+			b.orderCheck[orderId] <- true
 		}
 	}
 }
@@ -303,14 +319,11 @@ func (b *ConstProductBot) maintainOrderTwo(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			//b.createOrderTwo(b.ladderMapTwo[orderId], utils.ToggleSide(orderInfo.Side))
-			delete(b.ladderMapTwo, orderId)
-			if len(b.ladderMapTwo) == 0 {
-				b.checkSide <- "one"
-			}
+			b.orderCheckTwo[orderId] <- true
 		}
 	}
 }
+
 
 func (b *ConstProductBot) ElegantExit() {
 	b.updateLock.Lock()
