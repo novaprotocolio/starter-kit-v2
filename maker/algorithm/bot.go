@@ -159,11 +159,6 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 
 	block := make(chan bool)
 
-	// add 3 thread activate
-	block <- true
-	block <- true
-	block <- true
-
 	for _, ladder := range b.ladders {
 		if ladder.UpPrice.LessThanOrEqual(b.centerPrice) {
 			//price := ladder.UpPrice
@@ -179,6 +174,13 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 			go b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
 		}
 	}
+	
+	go func() {
+		// add 3 thread activate
+		block <- true
+		block <- true
+		block <- true
+	}()
 
 	wg.Wait()
 	close(block)
