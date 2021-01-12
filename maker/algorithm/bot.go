@@ -175,8 +175,8 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		} else {
 			wg.Add(2)
 			price := ladder.UpPrice
-			b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
-			b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
+			go b.OrderCheck(ctx, block, mutex, &wg, ladder, One , price)
+			go b.OrderCheck(ctx, block, mutex, &wg, ladder, Two , price)
 		}
 	}
 
