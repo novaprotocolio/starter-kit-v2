@@ -293,8 +293,10 @@ LoopWaiting:
 		}
 	}
 
+	b.updateLock.Lock()
 	delete(b.orderCheck, orderIdOne)
 	delete(b.orderCheckTwo, orderIdTwo)
+	b.updateLock.Unlock()
 
 	if success < 2 {
 		b.client.CancelOrder(orderIdOne)
