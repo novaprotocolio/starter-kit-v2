@@ -278,8 +278,6 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 	b.updateLock.Unlock()
 
 	success := 0
-	ctx, cancel := context.WithTimeout(ctx, time.Second * time.Duration(40))
-
 LoopWaiting:
 	for {
 		select {
@@ -289,14 +287,17 @@ LoopWaiting:
 			case <- b.orderCheckTwo[orderIdTwo]: {
 				success++
 			}
-			case <- ctx.Done(): {
+			case <- time.After(time.Second * time.Duration(25)): {
 				logrus.Info("timeout check order ->> ")
 				break LoopWaiting
+			}
+			case <- ctx.Done(): {
+				return
 			}
 		}
 
 		if success == 2 {
-			cancel()
+
 			break LoopWaiting
 		}
 	}
