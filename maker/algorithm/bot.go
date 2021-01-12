@@ -326,7 +326,9 @@ func (b *ConstProductBot) maintainOrder(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			b.orderCheck[orderId] <- true
+			go func() {
+				b.orderCheck[orderId] <- true
+			}()
 		}
 	}
 }
@@ -337,7 +339,9 @@ func (b *ConstProductBot) maintainOrderTwo(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			b.orderCheckTwo[orderId] <- true
+			go func() {
+				b.orderCheckTwo[orderId] <- true
+			}()
 		}
 	}
 }
