@@ -278,6 +278,8 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 	b.updateLock.Unlock()
 
 	success := 0
+
+	logrus.Info("check timeout order ", orderIdOne, orderIdTwo )
 LoopWaiting:
 	for {
 		select {
@@ -302,6 +304,7 @@ LoopWaiting:
 		}
 	}
 
+	logrus.Info("exits check timeout order ", orderIdOne, orderIdTwo )
 	b.updateLock.Lock()
 	delete(b.orderCheck, orderIdOne)
 	delete(b.orderCheckTwo, orderIdTwo)
