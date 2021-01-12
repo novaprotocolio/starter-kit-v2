@@ -314,6 +314,8 @@ LoopWaiting:
 		b.client.CancelOrder(orderIdOne)
 		b.clientTwo.CancelOrder(orderIdTwo)
 	}
+
+	logrus.Info("End OrderCheck")
 }
 
 func (b *ConstProductBot) maintainOrder(orderId string) {
