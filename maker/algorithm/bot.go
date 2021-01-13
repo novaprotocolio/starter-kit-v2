@@ -105,9 +105,7 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 			select {
 				case <- tinker: {
 					for key := range b.orderCheck {
-						b.updateLock.Lock()
-						b.maintainOrder(key)
-						b.updateLock.Unlock()
+						go b.maintainOrder(key)
 					}
 				}
 				case <- ctx.Done(): {
@@ -124,9 +122,7 @@ func (b *ConstProductBot) Run(ctx context.Context) {
 			select {
 			case <- tinker: {
 				for key := range b.orderCheckTwo {
-					b.updateLock.Lock()
-					b.maintainOrderTwo(key)
-					b.updateLock.Unlock()
+					go b.maintainOrderTwo(key)
 				}
 			}
 			case <- ctx.Done(): {
@@ -214,7 +210,6 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 		err error
 	)
 
-	b.updateLock.Lock()
 
 	if side == One {
 		orderIdOne, err = b.client.CreateOrder(
@@ -272,9 +267,10 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 			return
 		}
 	}
+
+	b.updateLock.Lock()
 	b.orderCheck[orderIdOne] = make(chan bool)
 	b.orderCheckTwo[orderIdTwo] = make(chan bool)
-
 	b.updateLock.Unlock()
 
 	success := 0
@@ -305,12 +301,10 @@ LoopWaiting:
 
 	logrus.Info("exits check timeout order ", orderIdOne, orderIdTwo )
 
-	go func() {
-		b.updateLock.Lock()
-		delete(b.orderCheck, orderIdOne)
-		delete(b.orderCheckTwo, orderIdTwo)
-		b.updateLock.Unlock()
-	}()
+	b.updateLock.Lock()
+	delete(b.orderCheck, orderIdOne)
+	delete(b.orderCheckTwo, orderIdTwo)
+	b.updateLock.Unlock()
 
 	if success < 2 {
 		b.client.CancelOrder(orderIdOne)
@@ -326,9 +320,7 @@ func (b *ConstProductBot) maintainOrder(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			go func() {
-				b.orderCheck[orderId] <- true
-			}()
+			b.orderCheck[orderId] <- true
 		}
 	}
 }
@@ -339,9 +331,7 @@ func (b *ConstProductBot) maintainOrderTwo(orderId string) {
 		logrus.Warn("get order info failed ", err)
 	} else {
 		if orderInfo.Status == utils.ORDER_CLOSE && orderInfo.FilledAmount.GreaterThan(decimal.Zero) {
-			go func() {
-				b.orderCheckTwo[orderId] <- true
-			}()
+			b.orderCheckTwo[orderId] <- true
 		}
 	}
 }
