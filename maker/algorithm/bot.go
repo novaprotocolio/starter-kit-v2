@@ -159,7 +159,6 @@ func (b *ConstProductBot) Init() {
 
 func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 	var (
-		mutex = &sync.Mutex{}
 		wg sync.WaitGroup
 	)
 
@@ -177,8 +176,8 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 		//} else {
 		wg.Add(2)
 		price := ladder.UpPrice
-		go b.OrderCheck(ctx, mutex, &wg, ladder, One , price)
-		go b.OrderCheck(ctx, mutex, &wg, ladder, Two , price)
+		go b.OrderCheck(ctx, &wg, ladder, One , price)
+		go b.OrderCheck(ctx, &wg, ladder, Two , price)
 		//}
 	}
 
@@ -186,7 +185,7 @@ func (b *ConstProductBot) OrderLoop(ctx context.Context)  {
 	logrus.Info("Loop order after Wait")
 }
 
-func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
+func (b *ConstProductBot) OrderCheck(ctx context.Context, wg *sync.WaitGroup, ladder ConstProductLadder, side SideClient, price decimal.Decimal)  {
 
 	defer wg.Done()
 	defer func() {
@@ -221,7 +220,6 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
-			b.updateLock.Unlock()
 			return
 		}
 
@@ -234,7 +232,6 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
-			b.updateLock.Unlock()
 			return
 		}
 
@@ -250,7 +247,6 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
-			b.updateLock.Unlock()
 			return
 		}
 
@@ -263,7 +259,6 @@ func (b *ConstProductBot) OrderCheck(ctx context.Context, mutex *sync.Mutex, wg 
 		)
 		if err != nil {
 			logrus.Warn("create order failed ", err)
-			b.updateLock.Unlock()
 			return
 		}
 	}
